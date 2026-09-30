@@ -1,0 +1,208 @@
+/* ============================================================
+   src/components/Hero/Hero.css
+   ============================================================ */
+
+.hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    padding-top: 70px;
+}
+
+/* Animated gradient background */
+.hero__bg {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(108, 99, 255, 0.3) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 40% at 80% 80%, rgba(247, 37, 133, 0.2) 0%, transparent 60%),
+        var(--clr-bg);
+    z-index: 0;
+}
+
+.hero__grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(108, 99, 255, 0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(108, 99, 255, 0.07) 1px, transparent 1px);
+    background-size: 60px 60px;
+    z-index: 0;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+}
+
+.hero__content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    width: 100%;
+    padding: var(--space-3xl) var(--space-lg);
+}
+
+.hero__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    background: rgba(108, 99, 255, 0.12);
+    border: 1px solid rgba(108, 99, 255, 0.3);
+    border-radius: var(--radius-full);
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--clr-primary);
+    margin-bottom: var(--space-lg);
+    animation: fadeInDown 0.8s ease both;
+}
+
+.hero__badge svg {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
+}
+
+.hero__title {
+    font-family: var(--font-display);
+    font-size: clamp(42px, 8vw, 88px);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -2px;
+    color: #fff;
+    margin-bottom: var(--space-lg);
+    animation: fadeInDown 0.8s 0.15s ease both;
+}
+
+.hero__title .gradient-text {
+    background: linear-gradient(135deg, var(--clr-primary) 0%, var(--clr-accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero__subtitle {
+    font-size: clamp(16px, 2.5vw, 20px);
+    color: var(--clr-text-muted);
+    max-width: 580px;
+    margin: 0 auto var(--space-xl);
+    line-height: 1.7;
+    animation: fadeInDown 0.8s 0.3s ease both;
+}
+
+.hero__actions {
+    display: flex;
+    gap: var(--space-md);
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: var(--space-3xl);
+    animation: fadeInDown 0.8s 0.45s ease both;
+}
+
+.hero__btn-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: 12px 28px;
+    border-radius: var(--radius-full);
+    font-size: 15px;
+    font-weight: 600;
+    border: 1px solid var(--clr-border);
+    color: var(--clr-text);
+    transition: border-color var(--transition), background var(--transition);
+}
+
+.hero__btn-outline:hover {
+    border-color: var(--clr-primary);
+    background: rgba(108, 99, 255, 0.08);
+}
+
+.hero__stats {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-xl);
+    flex-wrap: wrap;
+    animation: fadeInUp 0.8s 0.6s ease both;
+}
+
+.hero__stat {
+    text-align: center;
+}
+
+.hero__stat-num {
+    font-family: var(--font-display);
+    font-size: 36px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--clr-primary), var(--clr-accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.1;
+}
+
+.hero__stat-label {
+    font-size: 13px;
+    color: var(--clr-text-muted);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Scroll indicator */
+.hero__scroll {
+    position: absolute;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--clr-text-faint);
+    animation: bounce 2s infinite;
+}
+
+.hero__scroll-line {
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(to bottom, var(--clr-primary), transparent);
+}
+
+/* Animations */
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes bounce {
+
+    0%,
+    100% {
+        transform: translateX(-50%) translateY(0);
+    }
+
+    50% {
+        transform: translateX(-50%) translateY(8px);
+    }
+}

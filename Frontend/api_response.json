@@ -1,0 +1,30 @@
+{
+  "success": true,
+  "total": 2,
+  "data": [
+    {
+      "eventType": "Hackathon",
+      "eventName": "Hackathon",
+      "teamName": "nagatha",
+      "leader": {
+        "name": "jana",
+        "email": "itsmegowtham1510@gmail.com",
+        "phone": "1234567890"
+      },
+      "members": [],
+      "onboardedAt": "2026-09-16T09:32:07.731Z"
+    },
+    {
+      "eventType": "Hackathon",
+      "eventName": "Hackathon",
+      "teamName": "Hh",
+      "leader": {
+        "name": "Hh",
+        "email": "ghostgowtham99@gmail.com",
+        "phone": "676678"
+      },
+      "members": [],
+      "onboardedAt": "2026-09-15T20:08:30.989Z"
+    }
+  ]
+}

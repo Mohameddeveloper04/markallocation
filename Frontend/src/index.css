@@ -1,0 +1,174 @@
+/* ============================================================
+   src/index.css  –  Global Design System
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+/* ── CSS Custom Properties ─────────────────────────────────── */
+:root {
+  /* Brand */
+  --clr-primary:       #6c63ff;
+  --clr-primary-dark:  #4f46e5;
+  --clr-primary-glow:  rgba(108, 99, 255, 0.35);
+  --clr-accent:        #f72585;
+  --clr-accent-glow:   rgba(247, 37, 133, 0.3);
+  --clr-secondary:     #7209b7;
+
+  /* Neutral */
+  --clr-bg:            #0d0d1a;
+  --clr-bg-1:          #12122a;
+  --clr-bg-2:          #1a1a38;
+  --clr-surface:       rgba(255, 255, 255, 0.04);
+  --clr-surface-hover: rgba(255, 255, 255, 0.08);
+  --clr-border:        rgba(255, 255, 255, 0.10);
+  --clr-text:          #e2e8f0;
+  --clr-text-muted:    #94a3b8;
+  --clr-text-faint:    #64748b;
+
+  /* Status */
+  --clr-confirmed:     #10b981;
+  --clr-pending:       #f59e0b;
+  --clr-waitlisted:    #3b82f6;
+  --clr-cancelled:     #ef4444;
+  --clr-unknown:       #94a3b8;
+
+  /* Typography */
+  --font-sans:    'Inter', system-ui, sans-serif;
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+
+  /* Spacing */
+  --space-xs:  4px;
+  --space-sm:  8px;
+  --space-md:  16px;
+  --space-lg:  24px;
+  --space-xl:  40px;
+  --space-2xl: 64px;
+  --space-3xl: 96px;
+
+  /* Radius */
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   20px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm:  0 2px 8px rgba(0,0,0,0.3);
+  --shadow-md:  0 8px 24px rgba(0,0,0,0.4);
+  --shadow-lg:  0 20px 60px rgba(0,0,0,0.5);
+  --shadow-glow:0 0 40px var(--clr-primary-glow);
+
+  /* Transitions */
+  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Reset ─────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--clr-bg);
+  color: var(--clr-text);
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root { width: 100%; min-height: 100vh; }
+
+img { max-width: 100%; display: block; }
+a { color: inherit; text-decoration: none; }
+button { cursor: pointer; border: none; background: none; font-family: inherit; }
+ul { list-style: none; }
+
+/* ── Utility classes ───────────────────────────────────────── */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-lg);
+}
+
+.section-label {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--clr-primary);
+  background: rgba(108,99,255,0.12);
+  border: 1px solid rgba(108,99,255,0.25);
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  margin-bottom: var(--space-md);
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+  margin-bottom: var(--space-md);
+}
+
+.section-title span {
+  background: linear-gradient(135deg, var(--clr-primary), var(--clr-accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.section-subtitle {
+  font-size: 16px;
+  color: var(--clr-text-muted);
+  max-width: 560px;
+  line-height: 1.7;
+}
+
+/* ── Status badge tokens ───────────────────────────────────── */
+.status-confirmed  { --badge-clr: var(--clr-confirmed);  }
+.status-pending    { --badge-clr: var(--clr-pending);    }
+.status-waitlisted { --badge-clr: var(--clr-waitlisted); }
+.status-cancelled  { --badge-clr: var(--clr-cancelled);  }
+.status-unknown    { --badge-clr: var(--clr-unknown);    }
+
+/* ── Glass card ────────────────────────────────────────────── */
+.glass-card {
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  backdrop-filter: blur(12px);
+  transition: background var(--transition), border-color var(--transition),
+              transform var(--transition), box-shadow var(--transition);
+}
+.glass-card:hover {
+  background: var(--clr-surface-hover);
+  border-color: rgba(108,99,255,0.35);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md), 0 0 20px var(--clr-primary-glow);
+}
+
+/* ── Primary button ────────────────────────────────────────── */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 12px 28px;
+  border-radius: var(--radius-full);
+  font-size: 15px;
+  font-weight: 600;
+  background: linear-gradient(135deg, var(--clr-primary), var(--clr-secondary));
+  color: #fff;
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px var(--clr-primary-glow);
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--clr-bg-1); }
+::-webkit-scrollbar-thumb { background: var(--clr-primary); border-radius: 3px; }
