@@ -8,6 +8,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
     getParticipants,
     syncParticipants,
+    deleteParticipant,
     getFriendlyError,
     refreshInterval,
 } from '../../services/participantApi';
@@ -48,7 +49,7 @@ function SkeletonCards({ count = 6 }) {
     ));
 }
 
-function ParticipantCard({ participant }) {
+function ParticipantCard({ participant, onRemove, isRemoving }) {
     const { label: statusLabel, color: statusColor } = getStatusLabel(participant.status);
     const initials = getInitials(participant.name);
 
@@ -95,9 +96,21 @@ function ParticipantCard({ participant }) {
                 )}
             </div>
 
-            {participant.event && (
-                <span className="participant-card__event">🎯 {participant.event}</span>
-            )}
+            <div className="participant-card__footer">
+                {participant.event ? (
+                    <span className="participant-card__event">🎯 {participant.event}</span>
+                ) : <span />}
+                <button
+                    type="button"
+                    className="participant-card__remove-btn"
+                    onClick={() => onRemove(participant)}
+                    disabled={isRemoving}
+                    title="Remove participant from database"
+                    aria-label={`Remove ${participant.name || participant.registrationId}`}
+                >
+                    {isRemoving ? '⏳ Removing…' : '🗑️ Remove'}
+                </button>
+            </div>
         </article>
     );
 }
@@ -108,6 +121,7 @@ export default function RegisteredParticipants() {
     const [loading, setLoading] = useState(true);
     const [syncing, setSyncing] = useState(false);
     const [syncMsg, setSyncMsg] = useState('');
+    const [removingId, setRemovingId] = useState(null);
     const [error, setError] = useState(null);
 
     const [searchName, setSearchName] = useState('');
@@ -145,6 +159,25 @@ export default function RegisteredParticipants() {
         } finally {
             setSyncing(false);
             setTimeout(() => setSyncMsg(''), 5000);
+        }
+    }, []);
+
+    // ── Remove participant from database ───────────────────────
+    const handleRemove = useCallback(async (participant) => {
+        const confirmMsg = `Are you sure you want to remove "${participant.name || participant.registrationId}" from the database?`;
+        if (!window.confirm(confirmMsg)) return;
+
+        setRemovingId(participant.registrationId);
+        try {
+            await deleteParticipant(participant.registrationId);
+            setParticipants((prev) => prev.filter((p) => p.registrationId !== participant.registrationId));
+            setTotal((prev) => Math.max(0, prev - 1));
+            setSyncMsg(`🗑️ Removed ${participant.name || participant.registrationId} from database.`);
+            setTimeout(() => setSyncMsg(''), 4000);
+        } catch (err) {
+            alert(`Failed to remove participant: ${err.message || 'Unknown error'}`);
+        } finally {
+            setRemovingId(null);
         }
     }, []);
 
@@ -253,9 +286,9 @@ export default function RegisteredParticipants() {
 
                     {!loading && !error && participants.length === 0 && (
                         <div className="participants__empty" role="status">
-                            <div className="participants__empty-icon" aria-hidden="true">🎓</div>
-                            <h3>No Participants Yet</h3>
-                            <p>Click <strong>Sync Now</strong> to fetch the latest registrations from the API.</p>
+                            <div className="participants__empty-icon" aria-hidden="true">🔄</div>
+                            <h3>No Participants Loaded</h3>
+                            <p>Click <strong>Sync Now</strong> above to fetch the latest onboarded participants.</p>
                         </div>
                     )}
 
@@ -268,7 +301,12 @@ export default function RegisteredParticipants() {
                     )}
 
                     {!loading && !error && filtered.map((p) => (
-                        <ParticipantCard key={p._id ?? p.registrationId ?? p.name} participant={p} />
+                        <ParticipantCard
+                            key={p._id ?? p.registrationId ?? p.name}
+                            participant={p}
+                            onRemove={handleRemove}
+                            isRemoving={removingId === p.registrationId}
+                        />
                     ))}
 
                 </div>

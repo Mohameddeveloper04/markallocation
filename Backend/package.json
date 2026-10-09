@@ -6,7 +6,7 @@
     "type": "module",
     "scripts": {
         "start": "node server.js",
-        "dev": "node --watch server.js"
+        "dev": "node --watch --watch-path=src --watch-path=.env --watch-path=server.js server.js"
     },
     "keywords": [],
     "author": "",

@@ -1,7 +1,7 @@
 // ============================================================
 //  Frontend/src/services/participantApi.js
-//  Calls the LOCAL backend — never the external API directly.
-//  The external API key lives in Backend/.env only.
+//  - getParticipants  → backend GET  /api/participants
+//  - syncParticipants → backend POST /api/participants/sync (avoids CORS)
 // ============================================================
 
 import { getParticipantsUrl, getSyncUrl } from '../config/api';
@@ -10,7 +10,7 @@ import API_CONFIG from '../config/api';
 // ── Internal fetch wrapper ─────────────────────────────────
 const apiFetch = async (url, opts = {}) => {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 15_000);
+    const timer = setTimeout(() => controller.abort(), 20_000);
 
     try {
         const res = await fetch(url, { signal: controller.signal, ...opts });
@@ -32,42 +32,60 @@ const apiFetch = async (url, opts = {}) => {
     }
 };
 
-// ── Public service functions ───────────────────────────────
+// ── Map external API raw record → display object ───────────
+const mapParticipant = (raw) => ({
+    registrationId: raw.registrationId || raw._id || raw.teamName || raw.leader?.email,
+    name:           raw.leader?.name   || raw.teamName || null,
+    college:        raw.college        || raw.leader?.college    || null,
+    department:     raw.department     || raw.leader?.department || null,
+    year:           raw.year           || raw.leader?.year       || null,
+    event:          raw.eventName      || raw.eventType          || null,
+    status:         raw.status         || 'confirmed',
+    teamName:       raw.teamName       || null,
+    teamSize:       raw.teamSize       || null,
+    members:        raw.members        || [],
+});
 
-/**
- * Fetches cached participants from the backend (reads MongoDB).
- * @returns {Promise<{ participants: object[], total: number }>}
- */
+const unwrap = (data) =>
+    Array.isArray(data)
+        ? data
+        : data?.data ?? data?.registrations ?? data?.results ?? data?.participants ?? [];
+
+// ── Public: page-load fetch (backend returns empty instantly) ──
 export const getParticipants = async () => {
     const data = await apiFetch(getParticipantsUrl());
     return {
         participants: data.participants ?? [],
-        total: data.total ?? 0,
+        total:        data.total        ?? 0,
     };
 };
 
-/**
- * Triggers a sync: backend fetches from external API → saves to DB → returns list.
- * @returns {Promise<{ participants: object[], total: number, synced: number }>}
- */
+// ── Public: Sync Now — delegates to backend proxy (no CORS issues) ──
 export const syncParticipants = async () => {
     const data = await apiFetch(getSyncUrl(), { method: 'POST' });
     return {
         participants: data.participants ?? [],
-        total: data.total ?? 0,
-        synced: data.synced ?? 0,
+        total:        data.total        ?? (data.participants?.length || 0),
+        synced:       data.synced       ?? (data.participants?.length || 0),
     };
 };
 
-/** User-friendly error messages — never exposes technical details */
+// ── Public: Delete Participant from database ─────────────────
+export const deleteParticipant = async (registrationId) => {
+    return await apiFetch(`${getParticipantsUrl()}/${encodeURIComponent(registrationId)}`, {
+        method: 'DELETE',
+    });
+};
+
+// ── User-friendly error messages ───────────────────────────
 export const getFriendlyError = (err) => {
     const map = {
         API_UNAUTHORIZED: 'Access to participant data is restricted.',
         API_RATE_LIMITED: 'Too many requests. Please wait a moment.',
         API_SERVER_ERROR: 'The server is temporarily unavailable.',
-        API_TIMEOUT: 'The request timed out. Check your connection.',
+        API_TIMEOUT:      'The request timed out. Check your connection.',
     };
-    return map[err?.message] ?? 'Unable to load participant information right now. Please try again later.';
+    return map[err?.message] ?? 'Unable to load participant information. Please try again.';
 };
 
 export const refreshInterval = API_CONFIG.refreshInterval;

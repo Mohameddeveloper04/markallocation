@@ -3,11 +3,19 @@
 // ============================================================
 
 import 'dotenv/config';
+import dns from 'dns';
 import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import participantRoutes from './src/routes/participants.js';
 import eventConfigRoutes from './src/routes/eventConfigs.js';
+
+// Windows Node DNS fix for mongodb+srv:// SRV lookups
+try {
+    dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (e) {
+    console.warn('Could not set custom DNS servers:', e.message);
+}
 
 const app = express();
 const PORT = process.env.PORT || 3001;

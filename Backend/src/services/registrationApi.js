@@ -5,10 +5,14 @@
 // ============================================================
 
 import axios from 'axios';
+import https from 'https';
 
 const BASE = process.env.REGISTRATION_API_BASE;
 const ENDPOINT = process.env.REGISTRATION_API_ENDPOINT;
 const API_KEY = process.env.REGISTRATION_API_KEY;
+
+// Force IPv4 — the external host does not respond over IPv6
+const ipv4Agent = new https.Agent({ family: 4 });
 
 /**
  * Fetches the raw onboarded participants list from the
@@ -17,14 +21,16 @@ const API_KEY = process.env.REGISTRATION_API_KEY;
  * @returns {Promise<any>} Raw API response (array or wrapped object)
  */
 export const fetchOnboardedFromAPI = async () => {
-    // Use query parameter instead of header for authentication
-    const url = `${BASE}${ENDPOINT}?apikey=${API_KEY}`;
+    const base = process.env.REGISTRATION_API_BASE;
+    const endpoint = process.env.REGISTRATION_API_ENDPOINT;
+    const apiKey = process.env.REGISTRATION_API_KEY;
+
+    const url = `${base}${endpoint}?apikey=${apiKey}`;
 
     const response = await axios.get(url, {
-        headers: {
-            Accept: 'application/json',
-        },
-        timeout: 15000,
+        httpsAgent: ipv4Agent,
+        headers: { Accept: 'application/json' },
+        timeout: 20000,
     });
 
     return response.data;

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { getParticipants } from '../../services/participantApi';
+import { getParticipants, syncParticipants, deleteParticipant } from '../../services/participantApi';
 import { fetchEventConfig, saveEventConfig, updateParticipantMarks } from '../../services/markAllocationApi';
 import './MarkAllocation.css';
 
@@ -81,6 +81,7 @@ export default function MarkAllocation() {
     const [participants, setParticipants] = useState([]);
     const [rounds, setRounds] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [syncing, setSyncing] = useState(false);
 
     const [newRoundName, setNewRoundName] = useState('');
     const [newRoundMarks, setNewRoundMarks] = useState('');
@@ -91,14 +92,38 @@ export default function MarkAllocation() {
 
     useEffect(() => { loadData(); }, [selectedEvent]);
 
-    const loadData = async () => {
+    const loadData = async (forceSync = false) => {
         setLoading(true);
         try {
-            const configRounds = await fetchEventConfig(selectedEvent);
-            setRounds(configRounds);
+            // Load rounds independently
+            try {
+                const configRounds = await fetchEventConfig(selectedEvent);
+                setRounds(configRounds || []);
+            } catch (cfgErr) {
+                console.warn('Failed to load event rounds config:', cfgErr);
+                setRounds([]);
+            }
 
-            const result = await getParticipants();
-            const filtered = result.participants.filter(p => p.event === selectedEvent);
+            // Load participants from backend
+            let result = { participants: [] };
+            if (forceSync) {
+                result = await syncParticipants();
+            } else {
+                result = await getParticipants();
+                // If not synced yet (e.g. fresh reload), automatically sync
+                if (!result?.participants || result.participants.length === 0) {
+                    try {
+                        result = await syncParticipants();
+                    } catch (syncErr) {
+                        console.warn('Auto-sync in MarkAllocation failed:', syncErr);
+                    }
+                }
+            }
+
+            const allParticipants = result?.participants || [];
+            const filtered = allParticipants.filter(p =>
+                (p.event || '').trim().toLowerCase() === (selectedEvent || '').trim().toLowerCase()
+            );
             setParticipants(filtered);
 
             const initialMarks = {};
@@ -108,7 +133,13 @@ export default function MarkAllocation() {
             console.error('Failed to load data:', err);
         } finally {
             setLoading(false);
+            setSyncing(false);
         }
+    };
+
+    const handleSync = () => {
+        setSyncing(true);
+        loadData(true);
     };
 
     const handleAddRound = async () => {
@@ -154,6 +185,25 @@ export default function MarkAllocation() {
         }
     };
 
+    const handleRemoveParticipant = async (participant) => {
+        const confirmMsg = `Are you sure you want to remove "${participant.name || participant.registrationId}" from the database?`;
+        if (!window.confirm(confirmMsg)) return;
+
+        try {
+            await deleteParticipant(participant.registrationId);
+            setParticipants(prev => prev.filter(p => p.registrationId !== participant.registrationId));
+            setLocalMarks(prev => {
+                const next = { ...prev };
+                delete next[participant.registrationId];
+                return next;
+            });
+            alert('Participant removed from database successfully!');
+        } catch (err) {
+            console.error('Failed to remove participant:', err);
+            alert(`Failed to remove participant: ${err.message || 'Unknown error'}`);
+        }
+    };
+
     const getTotalMark = (regId) => {
         const m = localMarks[regId] || {};
         return rounds.reduce((sum, r) => sum + (Number(m[r.roundName]) || 0), 0);
@@ -180,8 +230,20 @@ export default function MarkAllocation() {
             )}
 
             <header className="mark-allocation__header">
-                <h2>Mark Allocation Board</h2>
-                <p>Configure rounds and allocate points to participants centrally.</p>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div>
+                        <h2>Mark Allocation Board</h2>
+                        <p>Configure rounds and allocate points to participants centrally.</p>
+                    </div>
+                    <button
+                        className="mark-allocation__btn"
+                        onClick={handleSync}
+                        disabled={syncing || loading}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', alignSelf: 'center', cursor: syncing ? 'wait' : 'pointer' }}
+                    >
+                        {syncing ? '⏳ Syncing...' : '🔄 Sync Participants'}
+                    </button>
+                </div>
             </header>
 
             {/* Event tabs */}
@@ -259,6 +321,13 @@ export default function MarkAllocation() {
                                         <button className="ma-mark-btn" onClick={() => setActiveParticipant(p)}>
                                             ✏️ Mark
                                         </button>
+                                        <button
+                                            className="ma-remove-btn"
+                                            onClick={() => handleRemoveParticipant(p)}
+                                            title="Remove participant from database"
+                                        >
+                                            🗑️
+                                        </button>
                                     </div>
                                 </div>
                             ))
@@ -305,9 +374,18 @@ export default function MarkAllocation() {
                                         ))}
                                         <td><strong>{getTotalMark(p.registrationId)}</strong></td>
                                         <td>
-                                            <button className="mark-allocation__save-btn" onClick={() => setActiveParticipant(p)}>
-                                                ✏️ Edit Marks
-                                            </button>
+                                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                                <button className="mark-allocation__save-btn" onClick={() => setActiveParticipant(p)}>
+                                                    ✏️ Edit Marks
+                                                </button>
+                                                <button
+                                                    className="mark-allocation__remove-btn"
+                                                    onClick={() => handleRemoveParticipant(p)}
+                                                    title="Remove participant from database"
+                                                >
+                                                    🗑️ Remove
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -345,9 +423,18 @@ export default function MarkAllocation() {
                                         ))}
                                     </div>
                                 )}
-                                <button className="ma-card__edit-btn" onClick={() => setActiveParticipant(p)}>
-                                    ✏️ Edit Marks
-                                </button>
+                                <div style={{ display: 'flex', gap: '8px', marginTop: '0.6rem' }}>
+                                    <button className="ma-card__edit-btn" onClick={() => setActiveParticipant(p)}>
+                                        ✏️ Edit Marks
+                                    </button>
+                                    <button
+                                        className="ma-card__remove-btn"
+                                        onClick={() => handleRemoveParticipant(p)}
+                                        title="Remove participant from database"
+                                    >
+                                        🗑️ Remove
+                                    </button>
+                                </div>
                             </div>
                         ))}
                     </div>

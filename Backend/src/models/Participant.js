@@ -10,9 +10,10 @@ import mongoose from 'mongoose';
 const participantSchema = new mongoose.Schema(
     {
         // ── Identity ─────────────────────────────────────────────
-        registrationId: { type: String, index: true },
+        registrationId: { type: String, index: true, unique: true, sparse: true },
         name: { type: String },
         email: { type: String }, // stored but NOT sent to frontend
+        phone: { type: String },
 
         // ── Institution ──────────────────────────────────────────
         college: { type: String },
@@ -22,6 +23,11 @@ const participantSchema = new mongoose.Schema(
         // ── Event ────────────────────────────────────────────────
         event: { type: String },
         status: { type: String, default: 'confirmed' },
+
+        // ── Team Info ────────────────────────────────────────────
+        teamName: { type: String },
+        teamSize: { type: Number },
+        members: { type: Array, default: [] },
 
         // ── Marks ────────────────────────────────────────────────
         marks: {
